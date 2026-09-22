@@ -1,0 +1,92 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * SwiftBus brand tokens.
+ *
+ * Every value is the HSL equivalent of the brand hex from the design system.
+ * shadcn/ui primitives read these variables directly, so setting them here is
+ * what makes every Button, Dialog, Input and Table inherit the brand without
+ * per-component overrides.
+ */
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 220 11.1% 94.7%;        /* #F0F1F3 */
+    --foreground: 222.2 47.4% 11.2%;      /* #0F172A */
+    --card: 0 0% 100%;                    /* #FFFFFF */
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    /* Brand green */
+    --primary: 152 63.3% 33.1%;           /* #1F8A58 */
+    --primary-hover: 152.9 64.6% 25.5%;   /* #176B45 */
+    --primary-light: 152.3 37.1% 93.1%;   /* #E7F4EE */
+    --primary-foreground: 0 0% 100%;
+
+    /* Brand navy */
+    --navy: 208.3 75% 18.8%;              /* #0C3254 */
+    --navy-light: 209.2 62.3% 23.9%;      /* #173E63 */
+    --navy-foreground: 0 0% 100%;
+
+    /* shadcn maps "secondary" to our navy family */
+    --secondary: 208.3 75% 18.8%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 11.1% 94.7%;
+    --muted-foreground: 220.6 13.2% 46.1%; /* #667085 */
+
+    --accent: 152.3 37.1% 93.1%;          /* primary-light */
+    --accent-foreground: 152.9 64.6% 25.5%;
+
+    /* Status */
+    --success: 152 63.3% 33.1%;           /* #1F8A58 */
+    --success-foreground: 0 0% 100%;
+    --warning: 37.4 91.3% 54.9%;          /* #F5A623 */
+    --warning-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 72.2% 50.6%;         /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Lines & focus. Ring is green per the brief. */
+    --border: 217.5 17.4% 91%;            /* #E4E7EC */
+    --input: 217.5 17.4% 91%;
+    --ring: 152 63.3% 33.1%;              /* #1F8A58 */
+
+    --radius: 0.75rem;                     /* rounded-xl cards */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+  }
+
+  /* Consistent focus treatment across the app. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbars on the collapsed sidebar rail without losing scroll. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}

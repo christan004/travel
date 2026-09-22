@@ -1,0 +1,29 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Multi-tenant Transport API",
+    "version": "0.1.0",
+    "description": "SwiftBus API. NOTE: this is the contract the dashboard was built against. Replace with the full Apidog export when available."
+  },
+  "servers": [
+    {
+      "url": "https://tickets.quicko.rw",
+      "description": "Production"
+    }
+  ],
+  "x-dashboard-notes": {
+    "missingEndpoints": [
+      "dashboard/statistics aggregate",
+      "payments/transactions"
+    ],
+    "corsIssues": [
+      "no access-control-allow-origin header",
+      "preflight allows only GET,HEAD,POST"
+    ],
+    "naming": {
+      "Bookings": "/api/v1/tickets",
+      "Buses": "/api/v1/cars",
+      "Passengers": "/api/v1/passengers (Prisma model: Passanger)"
+    }
+  }
+}
