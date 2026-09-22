@@ -11,6 +11,8 @@ interface AppEnv {
   apiOrigin: string
   isDev: boolean
   usingDevProxy: boolean
+  /** The deployment proxies /api itself, so requests stay same-origin. */
+  isSameOrigin: boolean
 }
 
 function required(name: string, value: string | undefined): string {
@@ -22,7 +24,25 @@ function required(name: string, value: string | undefined): string {
   return value.trim().replace(/\/+$/, '') // never keep a trailing slash
 }
 
-const apiOrigin = required('VITE_API_BASE_URL', import.meta.env.VITE_API_BASE_URL)
+/**
+ * Same-origin mode: `VITE_API_BASE_URL=same-origin`.
+ *
+ * The deployment serves /api itself (a reverse proxy in front of the
+ * dashboard), so requests use relative paths and never leave the origin -
+ * which sidesteps CORS entirely. That is how dashboard.quicko.rw is set up:
+ * https://dashboard.quicko.rw/api/v1/... already reaches the API.
+ *
+ * Spelled explicitly rather than as an empty string so it cannot be confused
+ * with a variable someone forgot to set.
+ */
+const SAME_ORIGIN = 'same-origin'
+
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
+const isSameOrigin = rawBaseUrl === SAME_ORIGIN
+
+const apiOrigin = isSameOrigin
+  ? ''
+  : required('VITE_API_BASE_URL', import.meta.env.VITE_API_BASE_URL)
 
 /**
  * Vite INLINES env vars at build time, so a production bundle built with a
@@ -31,7 +51,10 @@ const apiOrigin = required('VITE_API_BASE_URL', import.meta.env.VITE_API_BASE_UR
  *
  * Fail loudly at startup instead, where the message points at the build.
  */
-if (!import.meta.env.DEV && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(apiOrigin)) {
+if (
+  !import.meta.env.DEV &&
+  /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(apiOrigin)
+) {
   throw new Error(
     `[env] This production build points at ${apiOrigin}. ` +
       'VITE_API_BASE_URL was a local address when the bundle was built - ' +
@@ -48,8 +71,10 @@ if (!import.meta.env.DEV && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test
 const usingDevProxy = import.meta.env.DEV && import.meta.env.VITE_USE_DEV_PROXY !== 'false'
 
 export const env: AppEnv = {
-  apiBaseUrl: usingDevProxy ? '' : apiOrigin,
+  // Empty in dev-proxy and same-origin modes: axios then uses relative paths.
+  apiBaseUrl: usingDevProxy || isSameOrigin ? '' : apiOrigin,
   apiOrigin,
   isDev: import.meta.env.DEV,
   usingDevProxy,
+  isSameOrigin,
 }

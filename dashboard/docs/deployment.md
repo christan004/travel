@@ -56,6 +56,11 @@ OPTIONS /api/v1/auth/login
   vary: Origin, Access-Control-Request-Headers
 ```
 
+Note it sends `access-control-allow-credentials` and `vary: Origin`, so CORS
+is half-configured - but **no origin ever receives
+`access-control-allow-origin`**, not even `http://localhost:5173`. So this is
+not an allowlist missing one domain; origin reflection is not wired up.
+
 Two gaps:
 
 1. **No `access-control-allow-origin` header at all.** The browser rejects
@@ -81,13 +86,39 @@ not permitted with cookies, and this app authenticates with httpOnly cookies.
 Note the API already sets `cross-origin-resource-policy: same-origin`, which
 also needs relaxing for a cross-origin dashboard.
 
+## dashboard.quicko.rw already proxies /api - use it
+
+Probed 2026-09-22: the dashboard host **already forwards `/api` to the API**.
+A full login works through it, cookies and all:
+
+```
+POST https://dashboard.quicko.rw/api/v1/auth/login
+-> 200, set-cookie: access_token=...; refresh_token=...
+GET  https://dashboard.quicko.rw/api/v1/auth/me
+-> 200 {"success":true,...}
+```
+
+Because that is the same origin the page is served from, **no CORS headers
+are involved at all**. The build just has to use relative paths:
+
+```
+VITE_API_BASE_URL=same-origin
+```
+
+which is what `.env.production` now sets. Verified against the built bundle:
+it issues `/api/v1/auth/me` on its own origin and contains no absolute API
+host anywhere.
+
+Use an absolute URL only for a deployment that does NOT proxy `/api` - and
+note that such a build is currently blocked by the browser, for the reason
+below.
+
 ### Until that is fixed
 
-Two options that avoid CORS entirely by making requests same-origin:
+Build with `VITE_API_BASE_URL=same-origin` and deploy behind the existing
+`/api` proxy, as above. The browser then talks to one origin and no CORS
+headers are required.
 
-- **Serve the dashboard from the API's domain** (e.g. `tickets.quicko.rw/app`)
-  and build with `VITE_API_BASE_URL=` empty so requests use relative paths.
-- **Reverse-proxy `/api` on the dashboard host** to the API, the way
-  `vite.config.ts` does in development, and build with an empty base URL.
-
-Both keep the browser talking to one origin, so no CORS headers are required.
+If a future deployment has no such proxy, the alternatives are to add one
+(the way `vite.config.ts` does in development) or to serve the dashboard from
+the API's own domain.
