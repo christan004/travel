@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 4179,
       host: true,
+      allowedHosts: ["dashboard.quicko.rw", "localhost", "127.0.0.1"],
     },
     server: {
       port: 5173,

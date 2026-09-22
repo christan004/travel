@@ -74,12 +74,14 @@ const dateTime = (iso: string | null | undefined) => {
   if (!iso) return '--'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '--'
+  // UTC: these are wall-clock times, not instants. See formatDateTime.
   return d.toLocaleString('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC',
   })
 }
 
@@ -87,14 +89,14 @@ const timeOnly = (iso: string | null | undefined) => {
   if (!iso) return null
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
 }
 
 const dateOnly = (iso: string | null | undefined) => {
   if (!iso) return '--'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '--'
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
 function formatDuration(minutes: number | undefined): string {

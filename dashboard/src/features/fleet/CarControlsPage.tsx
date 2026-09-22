@@ -38,7 +38,10 @@ const PAGE_SIZE = 20
 const dateOnly = (iso: string) => {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '--'
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  // UTC: validity dates are wall-clock, not instants. See formatDateTime.
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC',
+  })
 }
 
 /** Expiry is what an operator actually scans this table for. */

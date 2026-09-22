@@ -43,11 +43,23 @@ export function formatCompact(value: number): string {
   return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
 }
 
+/**
+ * The API's timestamps are WALL-CLOCK times, stored with a Z suffix.
+ *
+ * A trip departing "08:00" departs at 08:00 where the bus is - the zone is
+ * not meaningful. Formatting in the browser's zone would show 10:00 to a
+ * viewer in UTC+2 and 08:00 to one in UTC, for the same departure. Rendering
+ * in UTC shows everyone the time that was actually entered.
+ */
+const WALL_CLOCK = 'UTC'
+
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return '--'
   const d = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(d.getTime())) return '--'
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d)
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: WALL_CLOCK,
+  }).format(d)
 }
 
 export function formatDateTime(value: string | Date | null | undefined): string {
@@ -55,7 +67,8 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   const d = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(d.getTime())) return '--'
   return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: WALL_CLOCK,
   }).format(d)
 }
 
@@ -63,7 +76,9 @@ export function formatTime(value: string | Date | null | undefined): string {
   if (!value) return '--'
   const d = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(d.getTime())) return '--'
-  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(d)
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit', minute: '2-digit', timeZone: WALL_CLOCK,
+  }).format(d)
 }
 
 export function initials(...parts: Array<string | null | undefined>): string {

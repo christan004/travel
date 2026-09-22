@@ -43,21 +43,45 @@ export const requiredDate = (label: string) => Yup.string().required(`${label} i
  * while the API requires a full ISO-8601 UTC string. These convert both ways.
  * ------------------------------------------------------------------ */
 
+/**
+ * ISO timestamp -> the value a datetime-local input expects.
+ *
+ * These timestamps are WALL-CLOCK times, not instants: a trip departing
+ * "08:00" departs at 08:00 where the bus is, whatever zone the browser is
+ * in. So the UTC fields are read verbatim rather than converted.
+ *
+ * Converting was the old behaviour and it was wrong: picking 07:30 in UTC+2
+ * stored 05:30Z, and every generated stop time inherited the shift. It
+ * round-tripped in the UI - convert out, convert back - which is exactly why
+ * it went unnoticed. See docs/backend-trips.md.
+ */
 export function isoToLocalInput(iso: string | null | undefined): string {
   if (!iso) return ''
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ''
-
-  // Shift by the timezone offset so the picker shows local wall-clock time.
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
+  // slice(0, 16) of the ISO string is already "YYYY-MM-DDTHH:mm".
+  return date.toISOString().slice(0, 16)
 }
 
+/**
+ * datetime-local value -> the ISO string the API stores.
+ *
+ * The picked wall-clock time is sent AS-IS with a Z suffix: 07:30 becomes
+ * 07:30:00.000Z, not 05:30:00.000Z. `new Date(value).toISOString()` would
+ * apply the browser's offset and silently move the time.
+ *
+ * The API requires a zone - a bare "2026-11-10T08:00:00" is rejected with
+ * "Invalid ISO datetime" - so the suffix is not optional.
+ */
 export function localInputToIso(value: unknown): string | null {
   if (typeof value !== 'string' || !value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toISOString()
+
+  // "YYYY-MM-DDTHH:mm" or with seconds already appended.
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?/.exec(value)
+  if (!match) return null
+
+  const [, date, time, seconds] = match
+  return `${date}T${time}${seconds ?? ':00'}.000Z`
 }
 
 /* --------------------------- Cell renderers --------------------------- */

@@ -75,6 +75,7 @@ const LOOKUPS: Record<
     client: tripsApi as never,
     toLabel: (r: { id: string; departureAt: string }) =>
       `${new Date(r.departureAt).toLocaleString('en-GB', {
+        timeZone: 'UTC',
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
