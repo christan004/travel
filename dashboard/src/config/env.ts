@@ -25,6 +25,21 @@ function required(name: string, value: string | undefined): string {
 const apiOrigin = required('VITE_API_BASE_URL', import.meta.env.VITE_API_BASE_URL)
 
 /**
+ * Vite INLINES env vars at build time, so a production bundle built with a
+ * local API URL will make every visitor's browser call their OWN machine -
+ * which fails as a CORS error naming localhost, far from the real cause.
+ *
+ * Fail loudly at startup instead, where the message points at the build.
+ */
+if (!import.meta.env.DEV && /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(apiOrigin)) {
+  throw new Error(
+    `[env] This production build points at ${apiOrigin}. ` +
+      'VITE_API_BASE_URL was a local address when the bundle was built - ' +
+      'set it to the public API URL and rebuild.',
+  )
+}
+
+/**
  * In development the Vite server proxies /api to the upstream host (see
  * vite.config.ts). Requests must then be same-origin relative paths, so the
  * axios baseURL is intentionally empty. In production the app talks to the
