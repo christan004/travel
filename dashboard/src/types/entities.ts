@@ -460,14 +460,142 @@ export interface UpdateTripPointPayload {
  * Tickets
  * ------------------------------------------------------------------ */
 
-export type TicketStatus = 'BOOKED' | 'CANCELLED' | 'COMPLETED' | 'REFUNDED'
+/**
+ * Verified against the API, which rejects anything else with
+ * `expected one of "PENDING_PAYMENT"|"BOOKED"|...`.
+ *
+ * PENDING_PAYMENT and EXPIRED were missing here: a seat is held while payment
+ * is attempted, and the hold lapses into EXPIRED if it never completes. Both
+ * appear in real data, so leaving them out mislabelled live tickets.
+ */
+export type TicketStatus =
+  | 'PENDING_PAYMENT'
+  | 'BOOKED'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'REFUNDED'
+  | 'EXPIRED'
 
 export const TICKET_STATUSES: TicketStatus[] = [
+  'PENDING_PAYMENT',
   'BOOKED',
   'CANCELLED',
   'COMPLETED',
   'REFUNDED',
+  'EXPIRED',
 ]
+
+/** Payment attempt attached to a ticket. */
+export type PaymentStatus = 'PENDING' | 'SUCCESSFUL' | 'FAILED' | 'REFUNDED'
+
+export interface TicketPayment {
+  id: string
+  ticketId: string
+  companyId?: string
+  amount: DecimalString
+  currency: string | null
+  provider: string
+  payerPhone: string | null
+  transactionId: string | null
+  referenceId: string | null
+  idempotencyKey?: string
+  status: PaymentStatus | string
+  failureReason: string | null
+  paidAt: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** A stop as referenced by a ticket's boarding/destination point. */
+export interface TicketPoint {
+  id: string
+  sequence: number
+  scheduledArrivalAt?: string | null
+  scheduledDepartureAt?: string | null
+  location?: { id: string; name: string; address?: string }
+}
+
+/**
+ * A ticket as returned by the trip sales report, which is much richer than
+ * the flat /tickets row: it carries the passenger's boarding and destination
+ * POINTS (not bare location ids), the seats held, and every payment attempt.
+ */
+export interface ReportTicket {
+  id: string
+  publicReference: string
+  ticketNumber: string
+  passengerName: string
+  passengerPhone: string
+  price: DecimalString
+  currency: string | null
+  status: TicketStatus
+  holdExpiresAt: string | null
+  createdAt: string
+  updatedAt?: string
+  branch?: { id: string; name?: string } | null
+  boardingPoint?: TicketPoint
+  destinationPoint?: TicketPoint
+  ticketSeats?: Array<{ seat: { id: string; number: number; letter: string | null } }>
+  payments?: TicketPayment[]
+}
+
+/** Sales totals for one trip. */
+export interface TripSalesSummary {
+  total: number
+  seats: number
+  revenue: DecimalString
+  currency: string | null
+  /** Ticket counts keyed by status; only non-zero statuses appear. */
+  byStatus: Partial<Record<TicketStatus, number>>
+}
+
+/**
+ * GET /api/v1/tickets/trips - one row per trip, with its sales summary.
+ *
+ * `?startDate=` / `?endDate=` filter by **departureAt** here, unlike
+ * /trips where the same params filter createdAt. `?routeId=` is rejected.
+ */
+export interface TripSalesRow {
+  id: string
+  departureAt: string
+  arrivalAt: string | null
+  status: RecordStatus
+  createdAt: string
+  branch?: { id: string; name?: string } | null
+  route?: {
+    id: string
+    name: string
+    routeType: RouteType
+    distance: DecimalString
+    estimatedTimeInMinutes: number
+    fromLocation?: { id: string; name: string; address?: string }
+    toLocation?: { id: string; name: string; address?: string }
+  }
+  vehicle?: {
+    id: string
+    car?: { id: string; model: string; plateNumber: string; totalSeats?: number }
+    driver?: { id: string; firstName: string; lastName: string; phoneNumber?: string }
+  }
+  summary: TripSalesSummary
+}
+
+/**
+ * GET /api/v1/tickets/trips/{id} - the same row plus the trip's stops and
+ * every ticket sold on it.
+ */
+export interface TripSalesDetail extends TripSalesRow {
+  points?: Array<{
+    id: string
+    sequence: number
+    status: TripStopStatus
+    scheduledArrivalAt: string | null
+    scheduledDepartureAt: string | null
+    actualArrivalAt: string | null
+    actualDepartureAt: string | null
+    location?: { id: string; name: string; address?: string }
+  }>
+  tickets?: ReportTicket[]
+}
 
 export interface Ticket extends Timestamps {
   id: string

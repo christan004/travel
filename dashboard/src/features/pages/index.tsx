@@ -7,14 +7,12 @@ import {
   locationsApi,
   productTypesApi,
   routePricesApi,
-  ticketsApi,
   tripsApi,
 } from '@/api/resources'
 import { ResourcePage } from '@/features/resource/ResourcePage'
 import {
   locationsConfig,
   routePricesConfig,
-  ticketsConfig,
   tripsConfig,
 } from '@/features/resource/configs/operations'
 import {
@@ -54,7 +52,12 @@ export const RoutePricesPage = () => <ResourcePage client={routePricesApi} confi
  * timetable, so clicking a row can show the full run for free.
  */
 export const TripsPage = () => <ResourcePage client={tripsApi} config={tripsConfig} />
-export const TicketsPage = () => <ResourcePage client={ticketsApi} config={ticketsConfig} />
+/**
+ * Tickets is a sales report grouped by trip, not a flat ticket list: the API
+ * returns per-trip summaries at /tickets/trips. See TicketsPage.
+ */
+export { TicketsPage } from '@/features/operations/TicketsPage'
+export { TicketSalesDetailPage } from '@/features/operations/TicketSalesDetailPage'
 
 export const ProductTypesPage = () => <ResourcePage client={productTypesApi} config={productTypesConfig} />
 

@@ -18,6 +18,8 @@ import type {
   RoleDetail,
   RoutePrice,
   Ticket,
+  TripSalesDetail,
+  TripSalesRow,
   TravelRoute,
   Trip,
   TripDetail,
@@ -58,6 +60,19 @@ export const tripDetailApi = createResourceClient<TripDetail>('trips')
  */
 export const tripPointsApi = createResourceClient<TripPoint>('trip-points')
 export const ticketsApi = createResourceClient<Ticket>('tickets')
+
+/**
+ * Ticket sales grouped by trip -> /api/v1/tickets/trips.
+ *
+ * One row per trip with a `summary` (tickets sold, seats, revenue, and a
+ * breakdown by status), rather than a flat list of every ticket. Unlike
+ * /trips, `?startDate=`/`?endDate=` here filter by DEPARTURE, which is the
+ * question a sales report is actually asked.
+ */
+export const tripSalesApi = createResourceClient<TripSalesRow>('tickets/trips')
+
+/** The same path by id, which adds the trip's stops and every ticket sold. */
+export const tripSalesDetailApi = createResourceClient<TripSalesDetail>('tickets/trips')
 export const companyAccountsApi = createResourceClient<CompanyAccount>('company-accounts')
 export const branchesApi = createResourceClient<Branch>('branches')
 export const productTypesApi = createResourceClient<ProductType>('product-types')

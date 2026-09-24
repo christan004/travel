@@ -35,6 +35,7 @@ const pick = (name: ResourcePageName) =>
   )
 
 const TicketsPage = pick('TicketsPage')
+const TicketSalesDetailPage = pick('TicketSalesDetailPage')
 const TripsPage = pick('TripsPage')
 const TripDetailPage = pick('TripDetailPage')
 const RoutesPage = pick('RoutesPage')
@@ -86,6 +87,7 @@ export const router = createBrowserRouter([
 
           // Operations
           { path: 'tickets', element: page(<TicketsPage />) },
+          { path: 'tickets/:id', element: page(<TicketSalesDetailPage />) },
           { path: 'trips', element: page(<TripsPage />) },
           { path: 'trips/:id', element: page(<TripDetailPage />) },
           { path: 'routes', element: page(<RoutesPage />) },

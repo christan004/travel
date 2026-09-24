@@ -41,7 +41,37 @@ npm run build      # uses .env.production
 To deploy against a different API, change `.env.production` (or pass the
 variable inline) and **rebuild**. Editing files on the server does nothing.
 
-## The API does not yet send CORS headers
+## Production API: alphaapi.quicko.rw
+
+`.env.production` points at `https://alphaapi.quicko.rw`. Probed 2026-09-22:
+
+```
+OPTIONS /api/v1/auth/login   Origin: https://dashboard.quicko.rw
+-> 204
+   access-control-allow-origin: https://dashboard.quicko.rw   <- present
+   access-control-allow-credentials: true
+   access-control-allow-methods: GET,HEAD,POST                <- still limited
+   access-control-allow-headers: content-type
+```
+
+This host **does** send `access-control-allow-origin`, echoing the dashboard
+origin correctly - a real improvement on tickets.quicko.rw, which sent none.
+
+**But `allow-methods` is still GET,HEAD,POST.** Asking for PATCH, PUT or
+DELETE in the preflight returns the same three, so the browser blocks every
+write. Cross-origin, the dashboard can read but not edit or delete.
+
+Until that list includes `PATCH,PUT,DELETE`, either:
+
+- put the dashboard behind a proxy that forwards `/api` and build with
+  `VITE_API_BASE_URL=same-origin` (no CORS at all), or
+- accept a read-only deployment.
+
+Note the `/api` proxy on dashboard.quicko.rw was working earlier on
+2026-09-22 but returns a connection failure now, so it cannot currently be
+relied on.
+
+## The older host (tickets.quicko.rw) sent no CORS headers
 
 Fixing the URL is necessary but **not sufficient**. Probed 2026-09-22 against
 the live API:
